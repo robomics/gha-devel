@@ -195,7 +195,7 @@ jobs:
         id: cache-conan
         uses: actions/cache/restore@v4
         with:
-          key: ${{ needs.build-conan-deps.outputs.cache-key }}
+          key: ${{ needs.build-conan-deps.outputs.conan-key }}
           path: ${{ env.CONAN_HOME }}/p
           fail-on-cache-miss: true
 
