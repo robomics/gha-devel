@@ -71,7 +71,9 @@ jobs:
 
           hash="${{ hashFiles('.github/workflows/build-conan-deps.py', 'conanfile.py') }}"
 
-          suffix="${{ inputs.os }}-$CC-c++${{ inputs.cppstd }}-$hash"
+          compiler="$(cc --version | head -n 1 | tr '[[:space:]]' '-')"
+
+          suffix="${{ inputs.os }}-$compiler-c++${{ inputs.cppstd }}-$hash"
 
           echo "conan-key=conan-$suffix" | tee -a "$GITHUB_OUTPUT"
           echo "cmake-dbg-key=cmake-dbg-$suffix" | tee -a "$GITHUB_OUTPUT"
