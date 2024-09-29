@@ -134,7 +134,7 @@ jobs:
         uses: actions/cache/save@v4
         if: steps.cache-conan.outputs.cache-hit != 'true'
         with:
-          key: ${{ steps.cache-key.outputs.conan-key }}
+          key: ${{ steps.generate-cache-key.outputs.conan-key }}
           path: ${{ env.CONAN_HOME }}/p
         env:
           ZSTD_CLEVEL: 19
