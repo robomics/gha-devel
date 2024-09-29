@@ -66,6 +66,9 @@ jobs:
       - name: Generate cache key
         id: generate-cache-key
         run: |
+          set -u
+          set -e
+
           hash="${{ hashFiles('.github/workflows/build-conan-deps.py', 'conanfile.py') }}"
 
           prefix="${{ inputs.os }}-$CC-c++${{ inputs.cppstd }}-$hash"
