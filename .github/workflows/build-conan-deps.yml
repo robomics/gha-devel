@@ -71,11 +71,11 @@ jobs:
 
           hash="${{ hashFiles('.github/workflows/build-conan-deps.py', 'conanfile.py') }}"
 
-          prefix="${{ inputs.os }}-$CC-c++${{ inputs.cppstd }}-$hash"
+          suffix="${{ inputs.os }}-$CC-c++${{ inputs.cppstd }}-$hash"
 
-          echo "conan-key=conan-$key" | tee -a "$GITHUB_OUTPUT"
-          echo "cmake-dbg-key=cmake-dbg-$key" | tee -a "$GITHUB_OUTPUT"
-          echo "cmake-rel-key=cmake-rel-$key" | tee -a "$GITHUB_OUTPUT"
+          echo "conan-key=conan-$suffix" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-dbg-key=cmake-dbg-$suffix" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-rel-key=cmake-rel-$suffix" | tee -a "$GITHUB_OUTPUT"
 
       - name: Restore package cache
         id: cache-conan
