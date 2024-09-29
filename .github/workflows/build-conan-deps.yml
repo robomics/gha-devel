@@ -6,7 +6,7 @@ name: Build dependencies with Conan
 on:
   workflow_call:
     outputs:
-      cache-key:
+      conan-key:
         description: "Conan packages"
         value: ${{ jobs.collect-outputs.outputs.conan-key }}
       cmake-prefix-debug-key:
