@@ -9,12 +9,12 @@ on:
       cache-key:
         description: "Conan packages"
         value: ${{ jobs.collect-outputs.outputs.conan-key }}
-      cmake-prefix-debug:
+      cmake-prefix-debug-key:
         description: "CMake config dir (Debug)"
-        value: ${{ jobs.collect-outputs.outputs.cmake-prefix-debug }}
-      cmake-prefix-release:
+        value: ${{ jobs.collect-outputs.outputs.cmake-dbg-key }}
+      cmake-prefix-release-key:
         description: "CMake config dir (Release)"
-        value: ${{ jobs.collect-outputs.outputs.cmake-prefix-release }}
+        value: ${{ jobs.collect-outputs.outputs.cmake-rel-key }}
 
     inputs:
       conan-version:
