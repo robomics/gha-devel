@@ -103,7 +103,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        
+
       - name: Generate requirements.txt for pip
         run: |
           echo 'conan==${{ matrix.conan }}' > requirements.txt
@@ -219,8 +219,6 @@ jobs:
 
       - name: Configure project
         run: |
-          pwd
-          ls -lah
           cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
                 -DCMAKE_PREFIX_PATH="$PWD/conan-env"        \
                 -S .                                        \
