@@ -194,14 +194,6 @@ jobs:
           path: /tmp/cmake-prefix-rel.tar
           fail-on-cache-miss: true
 
-      - name: Restore CMake configs (Release)
-        if: matrix.build_type == 'Release'
-        uses: actions/cache/restore@v4
-        with:
-          key: ${{ needs.build-conan-deps.outputs.cmake-prefix-release-key }}
-          path: /tmp/cmake-prefix-rel.tar
-          fail-on-cache-miss: true
-
       - name: Extract CMake configs
         run: |
           mkdir conan-env
