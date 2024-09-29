@@ -307,7 +307,7 @@ jobs:
 
           hash="${{ hashFiles('.github/workflows/build-conan-deps.yml', 'conanfile.py') }}"
 
-          compiler="$(cl | head -n 1 | tr -c '[:alnum:]._-' '-' | sed 's/-\+/-/g' | sed 's/-$//')"
+          compiler="$(cl.exe | head -n 1 | tr -c '[:alnum:]._-' '-' | sed 's/-\+/-/g' | sed 's/-$//')"
 
           suffix="${{ inputs.os }}-$compiler-c++${{ inputs.cppstd }}-$hash"
 
