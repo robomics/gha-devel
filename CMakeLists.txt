@@ -17,3 +17,17 @@ find_package(FMT REQUIRED)
 
 target_link_libraries(main PRIVATE project_options fmt::fmt-header-only)
 
+include(GNUInstallDirs)
+install(
+        TARGETS main
+        COMPONENT Runtime
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/scratch/
+        PRIVATE_HEADER DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/scratch/)
+
+install(
+        FILES ${PROJECT_SOURCE_DIR}/LICENSE
+        DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/main/
+        COMPONENT Runtime)

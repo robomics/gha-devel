@@ -32,9 +32,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          repository: paulsengroup/hictk
-          ref: ci/optimize
 
       - name: Generate build args
         id: build-args
@@ -124,7 +121,7 @@ jobs:
           push: false
           cache-from: type=registry,ref=${{ steps.build-args.outputs.CACHE_REGISTRY_X86 }}
           cache-to: type=registry,ref=${{ steps.build-args.outputs.CACHE_REGISTRY_X86 }},mode=max,compression=zstd
-          tags: hictk:x86
+          tags: main:x86
           platforms: linux/amd64
           build-args: |
             C_COMPILER=${{ steps.build-args.outputs.C_COMPILER }}
@@ -141,15 +138,6 @@ jobs:
             GIT_IS_DIRTY=false
             VERSION=${{ steps.build-args.outputs.VERSION }}
 
-      - name: Download test dataset
-        run: |
-          mkdir -p test/data
-          curl -L 'https://zenodo.org/records/13849053/files/hictk_test_data.tar.zst?download=1' -o test/data/hictk_test_data.tar.zst
-          tar -xf test/data/hictk_test_data.tar.zst
-
-      - name: Test Docker image (x86)
-        run: utils/devel/test_docker_image.sh hictk:x86
-
       - name: Build Docker image (arm64)
         if: github.event_name != 'pull_request'
         uses: docker/build-push-action@v6
@@ -158,7 +146,7 @@ jobs:
           push: false
           cache-from: type=registry,ref=${{ steps.build-args.outputs.CACHE_REGISTRY_ARM64 }}
           cache-to: type=registry,ref=${{ steps.build-args.outputs.CACHE_REGISTRY_ARM64 }},mode=max,compression=zstd
-          tags: hictk:arm64
+          tags: main:arm64
           platforms: linux/arm64
           build-args: |
             C_COMPILER=${{ steps.build-args.outputs.C_COMPILER }}
