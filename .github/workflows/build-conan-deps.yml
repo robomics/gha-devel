@@ -288,8 +288,8 @@ jobs:
     steps:
       - name: Check at least one job succeded
         run:
-          if [ "${{ needs.build-deps-ubuntu.result }}" != 'success' }} &&
-               "${{ needs.build-deps-macos.result }}" != 'success' }} ]; then
+          if [ "${{ needs.build-deps-ubuntu.result }}" != 'success' &&
+               "${{ needs.build-deps-macos.result }}" != 'success' ]; then
             exit 1
           fi
 
