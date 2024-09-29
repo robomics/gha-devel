@@ -217,9 +217,11 @@ jobs:
 
       - name: Configure project
         run: |
-          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}          \
-                -DCMAKE_PREFIX_PATH="$PWD/conan-env"                 \
-                -S .                                                 \
+          pwd
+          ls -lah
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                -DCMAKE_PREFIX_PATH="$PWD/conan-env"        \
+                -S .                                        \
                 -B build
 
       - name: Build project
