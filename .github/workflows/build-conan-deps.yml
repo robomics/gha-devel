@@ -275,6 +275,7 @@ jobs:
   collect-outputs:
     name: Collect output
     runs-on: ubuntu-latest
+    if: always()
     needs:
       - build-deps-macos
       - build-deps-ubuntu
