@@ -143,7 +143,7 @@ jobs:
         uses: actions/cache/save@v4
         if: steps.cache-conan.outputs.cache-hit != 'true'
         with:
-          key: ${{ steps.cache-key.outputs.cmake-dbg-key }}
+          key: ${{ steps.generate-cache-key.outputs.cmake-dbg-key }}
           path: /tmp/cmake-prefix-dbg.tar
         env:
           ZSTD_CLEVEL: 19
@@ -152,7 +152,7 @@ jobs:
         uses: actions/cache/save@v4
         if: steps.cache-conan.outputs.cache-hit != 'true'
         with:
-          key: ${{ steps.cache-key.outputs.cmake-rel-key }}
+          key: ${{ steps.generate-cache-key.outputs.cmake-rel-key }}
           path: /tmp/cmake-prefix-rel.tar
         env:
           ZSTD_CLEVEL: 19
