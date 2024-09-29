@@ -90,7 +90,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Generate requirements.txt for pip
-        run: echo 'cmake==${{ matrix.cmake }}' >> requirements.txt
+        run: echo 'cmake==${{ matrix.cmake }}' > requirements.txt
 
       - uses: actions/setup-python@v5
         with:
@@ -159,6 +159,7 @@ jobs:
         run: |
           cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
                 -DCMAKE_PREFIX_PATH="$PWD/conan-env"        \
+                -DCMAKE_INSTALL_PREFIX=dest                 \
                 -S .                                        \
                 -B build
 
@@ -166,4 +167,6 @@ jobs:
         run: cmake --build build --config ${{ matrix.build_type }}
 
       - name: Test project
-        run: build/main
+        run: |
+          cmake --install build --config ${{ matrix.build_type }}
+          dest/Scripts/main
