@@ -62,8 +62,8 @@ jobs:
 
             var includes = []
 
-            includes.push({ compiler_name: 'msvc', os: 'windows-2022', conan: '2.4.*', cmake: '3.29.*', build_type: 'Debug', developer_mode: 'OFF' })
-            includes.push({ compiler_name: 'msvc', os: 'windows-2022', conan: '2.4.*', cmake: '3.29.*', build_type: 'Release', developer_mode: 'OFF' })
+            includes.push({ compiler_name: 'msvc', os: 'windows-2022', cmake: '3.29.*', build_type: 'Debug', developer_mode: 'OFF' })
+            includes.push({ compiler_name: 'msvc', os: 'windows-2022', cmake: '3.29.*', build_type: 'Release', developer_mode: 'OFF' })
 
             return { include: includes }
 
@@ -90,9 +90,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Generate requirements.txt for pip
-        run: |
-          echo 'conan==${{ matrix.conan }}' > requirements.txt
-          echo 'cmake==${{ matrix.cmake }}' >> requirements.txt
+        run: echo 'cmake==${{ matrix.cmake }}' >> requirements.txt
 
       - uses: actions/setup-python@v5
         with:
@@ -154,7 +152,8 @@ jobs:
       - name: Extract CMake configs
         run: |
           mkdir conan-env
-          tar -xf ${{ github.workspace }}/cmake-prefix-*.tar -C conan-env/ --strip-components=1
+          srcdir="$(cygpath '${{ github.workspace }}')"
+          tar -xf "$srcdir/"cmake-prefix-*.tar -C conan-env/ --strip-components=1
 
       - name: Configure project
         run: |
