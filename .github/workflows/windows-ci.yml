@@ -1,0 +1,170 @@
+# Copyright (C) 2024 Roberto Rossini <roberros@uio.no>
+# SPDX-License-Identifier: MIT
+
+name: macOS CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/windows-ci.yml"
+      - ".github/workflows/build-conan-deps.yml"
+      - "CMakeLists.txt"
+      - "conanfile.py"
+      - "main.cpp"
+
+  pull_request:
+    paths:
+      - ".github/workflows/windows-ci.yml"
+      - ".github/workflows/build-conan-deps.yml"
+      - "CMakeLists.txt"
+      - "conanfile.py"
+      - "main.cpp"
+
+# https://stackoverflow.com/a/72408109
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  matrix-factory:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-result.outputs.result }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.after }}
+
+      - name: Detect CI type
+        id: ci-type
+        run: |
+          if git log --format=%B -n 1 ${{ github.event.after }} | grep -qF '[ci full]'; then
+            echo "type=full" | tee -a "$GITHUB_OUTPUT"
+          else
+            echo "type=short" | tee -a "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate matrix
+        uses: actions/github-script@v7
+        id: set-result
+        with:
+          script: |
+            // Documentation
+            // https://docs.github.com/en/actions/learn-github-actions/contexts#fromjson
+            // https://github.com/actions/runner/issues/982#issuecomment-809360765
+
+            var includes = []
+
+            includes.push({ compiler_name: 'msvc', os: 'windows-2022', conan: '2.4.*', cmake: '3.29.*', build_type: 'Debug', developer_mode: 'OFF' })
+            includes.push({ compiler_name: 'msvc', os: 'windows-2022', conan: '2.4.*', cmake: '3.29.*', build_type: 'Release', developer_mode: 'OFF' })
+
+            return { include: includes }
+
+  build-conan-deps:
+    name: Build Conan deps
+    uses: robomics/gha-devel/.github/workflows/build-conan-deps.yml@main
+    with:
+      os: windows-2019
+
+  build-project:
+    name: Build project
+    needs:
+      - matrix-factory
+      - build-conan-deps
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix-factory.outputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+
+    env:
+      CONAN_HOME: "${{ github.workspace }}\\.conan2"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate requirements.txt for pip
+        run: |
+          echo 'conan==${{ matrix.conan }}' > requirements.txt
+          echo 'cmake==${{ matrix.cmake }}' >> requirements.txt
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Detect number available CPUs
+        run: |
+          ncpus=$(python -c 'import multiprocessing as mp; print(mp.cpu_count())')
+
+          echo "NPROC=$ncpus" >> $GITHUB_ENV
+          echo "CMAKE_BUILD_PARALLEL_LEVEL=$ncpus" >> $GITHUB_ENV
+          echo "CTEST_PARALLEL_LEVEL=$ncpus" >> $GITHUB_ENV
+
+      - name: Install build deps
+        run: pip install -r requirements.txt
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          set -u
+
+          os="${{ matrix.os }}"
+          compiler="${{ matrix.compiler_name }}"
+          build_type="${{ matrix.build_type }}"
+
+          conanfile_hash="${{ hashFiles('conanfile.py') }}"
+
+          # This can be used by to always update a cache entry (useful e.g. for ccache)
+          current_date="$(date '+%s')"
+
+          ccache_key_prefix="ccache-$os-$compiler-$GITHUB_REF-$conanfile_hash-$build_type"
+
+          echo "ccache-key=${ccache_key_prefix}-${current_date}" | tee -a $GITHUB_OUTPUT
+          echo "ccache-restore-key=$ccache_key_prefix" | tee -a $GITHUB_OUTPUT
+
+      - name: Restore Conan cache
+        uses: actions/cache/restore@v4
+        with:
+          key: ${{ needs.build-conan-deps.outputs.conan-key }}
+          path: ${{ env.CONAN_HOME }}\p
+          fail-on-cache-miss: true
+
+      - name: Restore CMake configs (Debug)
+        if: matrix.build_type == 'Debug'
+        uses: actions/cache/restore@v4
+        with:
+          key: ${{ needs.build-conan-deps.outputs.cmake-prefix-debug-key }}
+          path:  ${{ github.workspace }}\cmake-prefix-dbg.tar
+          fail-on-cache-miss: true
+
+      - name: Restore CMake configs (Release)
+        if: matrix.build_type == 'Release'
+        uses: actions/cache/restore@v4
+        with:
+          key: ${{ needs.build-conan-deps.outputs.cmake-prefix-release-key }}
+          path:  ${{ github.workspace }}\cmake-prefix-rel.tar
+          fail-on-cache-miss: true
+
+      - name: Extract CMake configs
+        run: |
+          mkdir conan-env
+          tar -xf ${{ github.workspace }}/cmake-prefix-*.tar -C conan-env/ --strip-components=1
+
+      - name: Configure project
+        run: |
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                -DCMAKE_PREFIX_PATH="$PWD/conan-env"        \
+                -S .                                        \
+                -B build
+
+      - name: Build project
+        run: cmake --build build --config ${{ matrix.build_type }}
+
+      - name: Test project
+        run: build/main
