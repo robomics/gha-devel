@@ -310,7 +310,9 @@ jobs:
 
           hash="${{ hashFiles('.github/workflows/build-conan-deps.yml', 'conanfile.py') }}"
 
-          compiler="$(cl.exe | head -n 1 | tr -c '[:alnum:]._-' '-' | sed 's/-\+/-/g' | sed 's/-$//')"
+          echo "_MSC_VER" > out.c
+
+          compiler="$(cl.exe /nologo /EP out.c)"
 
           suffix="${{ inputs.os }}-$compiler-c++${{ inputs.cppstd }}-$hash"
 
@@ -341,7 +343,6 @@ jobs:
           conan profile detect --force
           conan_profile="$(conan profile path default)"
 
-          sed -i 's/build_type=Release/build_type=${{ matrix.build_type }}/' "$conan_profile"
           sed -i 's/compiler\.cppstd=.*/compiler.cppstd=${{ inputs.cppstd }}/' "$conan_profile"
 
       - name: Clean Conan cache (pre-build)
