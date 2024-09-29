@@ -175,16 +175,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Update build deps
-        run: pip install "conan==${{ inputs.conan-version }}"
-
-      - name: Configure Conan
-        run: conan profile detect --force
-
       - name: Generate cache key
         id: generate-cache-key
         run: |
@@ -201,6 +191,19 @@ jobs:
           key: ${{ steps.generate-cache-key.outputs.key }}
           path: ${{ env.CONAN_HOME }}/p
           lookup-only: true
+
+      - uses: actions/setup-python@v5
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Update build deps
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        run: pip install "conan==${{ inputs.conan-version }}"
+
+      - name: Configure Conan
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        run: conan profile detect --force
 
       - name: Clean Conan cache (pre-build)
         if: steps.cache-conan.outputs.cache-hit != 'true'
