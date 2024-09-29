@@ -175,7 +175,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           key: ${{ needs.build-conan-deps-x86.outputs.cmake-prefix-release-key }}
-          path: /tmp/cmake-prefix-dbg.tar
+          path: /tmp/cmake-prefix-rel.tar
           fail-on-cache-miss: true
 
       - name: Restore CMake configs (arm64; Debug)
@@ -191,7 +191,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           key: ${{ needs.build-conan-deps-arm64.outputs.cmake-prefix-release-key }}
-          path: /tmp/cmake-prefix-dbg.tar
+          path: /tmp/cmake-prefix-rel.tar
           fail-on-cache-miss: true
 
       - name: Restore CMake configs (Release)
