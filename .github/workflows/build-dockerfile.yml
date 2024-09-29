@@ -141,6 +141,12 @@ jobs:
             GIT_IS_DIRTY=false
             VERSION=${{ steps.build-args.outputs.VERSION }}
 
+      - name: Download test dataset
+        run: |
+          mkdir -p test/data
+          curl -L 'https://zenodo.org/records/13849053/files/hictk_test_data.tar.zst?download=1' -o test/data/hictk_test_data.tar.zst
+          tar -xf test/data/hictk_test_data.tar.zst
+
       - name: Test Docker image (x86)
         run: utils/devel/test_docker_image.sh hictk:x86
 
