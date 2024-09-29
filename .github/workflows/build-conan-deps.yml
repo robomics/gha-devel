@@ -1,0 +1,294 @@
+# Copyright (C) 2024 Roberto Rossini <roberros@uio.no>
+# SPDX-License-Identifier: MIT
+
+name: Build dependencies with Conan
+
+on:
+  workflow_call:
+    outputs:
+      cache-key:
+        description: "Conan packages"
+        value: ${{ jobs.collect-outputs.outputs.key }}
+      cmake-prefix-debug:
+        description: "CMake config dir (Debug)"
+        value: ${{ jobs.collect-outputs.outputs.cmake-prefix-debug }}
+      cmake-prefix-release:
+        description: "CMake config dir (Release)"
+        value: ${{ jobs.collect-outputs.outputs.cmake-prefix-release }}
+
+    inputs:
+      conan-version:
+        default: "2.7.*"
+        type: string
+        required: false
+        description: "Conan version to be installed with pip."
+      cppstd:
+        default: "17"
+        type: string
+        required: false
+        description: "Value to pass to compiler.cppstd."
+      os:
+        type: string
+        required: true
+        description: "OS used to build Conan deps."
+
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build-deps-ubuntu:
+    if: startsWith(inputs.os, 'ubuntu')
+    name: Build dependencies with Conan (Ubuntu)
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/paulsengroup/ci-docker-images/${{ inputs.os }}-cxx-clang-19
+      options: "--user=root"
+
+    env:
+      CCACHE_DISABLE: "1"
+      CONAN_HOME: "/opt/conan/"
+
+    outputs:
+      conan-key: ${{ steps.generate-cache-key.outputs.conan-key }}
+      cmake-dbg-key: ${{ steps.generate-cache-key.outputs.cmake-dbg-key }}
+      cmake-rel-key: ${{ steps.generate-cache-key.outputs.cmake-rel-key }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Update build deps
+        run: pip install "conan==${{ inputs.conan-version }}"
+
+      - name: Generate cache key
+        id: generate-cache-key
+        run: |
+          hash="${{ hashFiles('.github/workflows/build-conan-deps.py', 'conanfile.py') }}"
+
+          prefix="${{ inputs.os }}-$CC-c++${{ inputs.cppstd }}-$hash"
+
+          echo "conan-key=conan-$key" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-dbg-key=cmake-dbg-$key" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-rel-key=cmake-rel-$key" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Restore package cache
+        id: cache-conan
+        uses: actions/cache/restore@v4
+        with:
+          key: ${{ steps.generate-cache-key.outputs.key }}
+          path: ${{ env.CONAN_HOME }}/p
+          lookup-only: true
+
+      - name: Clean Conan cache (pre-build)
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        run: |
+          conan cache clean "*" --build
+          conan cache clean "*" --download
+          conan cache clean "*" --source
+          conan remove --confirm "*"
+
+      - name: Install dependencies (Debug)
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        run: |
+          conan install conanfile.py                  \
+             --build='missing'                        \
+             -pr:b="$CONAN_DEFAULT_PROFILE_PATH"      \
+             -pr:h="$CONAN_DEFAULT_PROFILE_PATH"      \
+             -s build_type=Debug                      \
+             -s compiler.libcxx=libstdc++11           \
+             -s compiler.cppstd=${{ inputs.cppstd }}  \
+             --output-folder cmake-prefix-dbg
+
+          tar -cf /tmp/cmake-prefix-dbg.tar cmake-prefix-dbg
+
+      - name: Install dependencies (Release)
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        run: |
+          conan install conanfile.py                  \
+             --build='missing'                        \
+             -pr:b="$CONAN_DEFAULT_PROFILE_PATH"      \
+             -pr:h="$CONAN_DEFAULT_PROFILE_PATH"      \
+             -s build_type=Release                    \
+             -s compiler.libcxx=libstdc++11           \
+             -s compiler.cppstd=${{ inputs.cppstd }}
+
+          tar -cf /tmp/cmake-prefix-rel.tar cmake-prefix-rel
+
+      - name: Clean Conan cache (post-build)
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        run: |
+          conan cache clean "*" --build
+          conan cache clean "*" --download
+          conan cache clean "*" --source
+
+      - name: Save Conan cache
+        uses: actions/cache/save@v4
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        with:
+          key: ${{ steps.cache-key.outputs.conan-key }}
+          path: ${{ env.CONAN_HOME }}/p
+        env:
+          ZSTD_CLEVEL: 19
+
+      - name: Save CMake configs (Debug)
+        uses: actions/cache/save@v4
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        with:
+          key: ${{ steps.cache-key.outputs.cmake-dbg-key }}
+          path: /tmp/cmake-prefix-dbg.tar
+        env:
+          ZSTD_CLEVEL: 19
+
+      - name: Save CMake configs (Release)
+        uses: actions/cache/save@v4
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        with:
+          key: ${{ steps.cache-key.outputs.cmake-rel-key }}
+          path: /tmp/cmake-prefix-rel.tar
+        env:
+          ZSTD_CLEVEL: 19
+
+  build-deps-macos:
+    if: startsWith(inputs.os, 'macos')
+    name: Build dependencies with Conan (macOs)
+    runs-on: ${{ inputs.os }}
+
+    env:
+      CONAN_HOME: "${{ github.workspace }}/.conan2"
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+
+    outputs:
+      conan-key: ${{ steps.generate-cache-key.outputs.conan-key }}
+      cmake-dbg-key: ${{ steps.generate-cache-key.outputs.cmake-dbg-key }}
+      cmake-rel-key: ${{ steps.generate-cache-key.outputs.cmake-rel-key }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Update build deps
+        run: pip install "conan==${{ inputs.conan-version }}"
+
+      - name: Configure Conan
+        run: conan profile detect --force
+
+      - name: Generate cache key
+        id: generate-cache-key
+        run: |
+          hash="${{ hashFiles('.github/workflows/build-conan-deps.py', 'conanfile.py') }}"
+
+          key="conan-${{ inputs.os }}-$CC-c++${{ inputs.cppstd }}-$hash"
+
+          echo "key=$key" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Restore package cache
+        id: cache-conan
+        uses: actions/cache/restore@v4
+        with:
+          key: ${{ steps.generate-cache-key.outputs.key }}
+          path: ${{ env.CONAN_HOME }}/p
+          lookup-only: true
+
+      - name: Clean Conan cache (pre-build)
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        run: |
+          conan cache clean "*" --build
+          conan cache clean "*" --download
+          conan cache clean "*" --source
+          conan remove --confirm "*"
+
+      - name: Install dependencies (Debug)
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        run: |
+          conan install conanfile.py                  \
+             --build='missing'                        \
+             -pr:b=default                            \
+             -pr:h=default                            \
+             -s build_type=Debug                      \
+             -s compiler.libcxx=libc++                \
+             -s compiler.cppstd=${{ inputs.cppstd }}
+
+          gtar -cf /tmp/cmake-prefix-dbg.tar cmake-prefix-dbg
+
+      - name: Install dependencies (Release)
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        run: |
+          conan install conanfile.py                  \
+             --build='missing'                        \
+             -pr:b=default                            \
+             -pr:h=default                            \
+             -s build_type=Release                    \
+             -s compiler.libcxx=libc++                \
+             -s compiler.cppstd=${{ inputs.cppstd }}
+
+          gtar -cf /tmp/cmake-prefix-rel.tar cmake-prefix-rel
+
+      - name: Clean Conan cache (post-build)
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        run: |
+          conan cache clean "*" --build
+          conan cache clean "*" --download
+          conan cache clean "*" --source
+
+      - name: Save Conan cache
+        uses: actions/cache/save@v4
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        with:
+          key: ${{ steps.cache-key.outputs.conan-key }}
+          path: ${{ env.CONAN_HOME }}/p
+        env:
+          ZSTD_CLEVEL: 19
+
+      - name: Save CMake configs (Debug)
+        uses: actions/cache/save@v4
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        with:
+          key: ${{ steps.cache-key.outputs.cmake-dbg-key }}
+          path: /tmp/cmake-prefix-dbg.tar
+        env:
+          ZSTD_CLEVEL: 19
+
+      - name: Save CMake configs (Release)
+        uses: actions/cache/save@v4
+        if: steps.cache-conan.outputs.cache-hit != 'true'
+        with:
+          key: ${{ steps.cache-key.outputs.cmake-rel-key }}
+          path: /tmp/cmake-prefix-rel.tar
+        env:
+          ZSTD_CLEVEL: 19
+
+  collect-outputs:
+    name: Collect output
+    runs-on: ubuntu-latest
+    needs:
+      - build-deps-macos
+      - build-deps-ubuntu
+
+    outputs:
+      conan-key: ${{ steps.collect-cache-key.outputs.conan-key }}
+      cmake-dbg-key: ${{ steps.collect-cache-key.outputs.cmake-dbg-key }}
+      cmake-rel-key: ${{ steps.collect-cache-key.outputs.cmake-rel-key }}
+
+    steps:
+      - name: Collect output (Ubuntu)
+        if: startsWith(inputs.os, 'ubuntu')
+        id: collect-cache-key
+        run: |
+          echo "conan-key=${{ needs.build-deps-ubuntu.outputs.conan-key }}" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-dbg-key=${{ needs.build-deps-ubuntu.outputs.cmake-dbg-key }}" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-rel-key=${{ needs.build-deps-ubuntu.outputs.cmake-rel-key }}" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Collect output (macOS)
+        if: startsWith(inputs.os, 'macos')
+        id: collect-cache-key
+        run: |
+          echo "conan-key=${{ needs.build-deps-macos.outputs.conan-key }}" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-dbg-key=${{ needs.build-deps-macos.outputs.cmake-dbg-key }}" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-rel-key=${{ needs.build-deps-macos.outputs.cmake-rel-key }}" | tee -a "$GITHUB_OUTPUT"
