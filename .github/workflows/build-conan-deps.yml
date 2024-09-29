@@ -296,7 +296,7 @@ jobs:
     runs-on: ${{ inputs.os }}
 
     env:
-      CONAN_HOME: "${{ runner.temp }}\\.conan2"
+      CONAN_HOME: "${{ github.workspace }}\\.conan2"
 
     outputs:
       conan-key: ${{ steps.generate-cache-key.outputs.conan-key }}
