@@ -102,6 +102,8 @@ jobs:
       HOMEBREW_NO_AUTO_UPDATE: "1"
 
     steps:
+      - uses: actions/checkout@v4
+        
       - name: Generate requirements.txt for pip
         run: |
           echo 'conan==${{ matrix.conan }}' > requirements.txt
