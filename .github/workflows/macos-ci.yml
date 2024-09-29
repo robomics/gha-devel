@@ -86,6 +86,9 @@ jobs:
       - matrix-factory
       - build-conan-deps-x86
       - build-conan-deps-arm64
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix-factory.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
 
     env:
