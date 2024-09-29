@@ -169,4 +169,4 @@ jobs:
       - name: Test project
         run: |
           cmake --install build --config ${{ matrix.build_type }}
-          dest/Scripts/main
+          dest/main
