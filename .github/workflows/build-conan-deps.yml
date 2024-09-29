@@ -293,7 +293,7 @@ jobs:
           echo "CMAKE_REL_KEY=${{ needs.build-deps-ubuntu.outputs.cmake-rel-key }}" | tee -a "$GITHUB_ENV"
 
       - name: Collect output (macOS)
-        if: startsWith(inputs.os, 'ubuntu')
+        if: startsWith(inputs.os, 'macos')
         run: |
           echo "CONAN_KEY=${{ needs.build-deps-macos.outputs.conan-key }}" | tee -a "$GITHUB_ENV"
           echo "CMAKE_DBG_KEY=${{ needs.build-deps-macos.outputs.cmake-dbg-key }}" | tee -a "$GITHUB_ENV"
