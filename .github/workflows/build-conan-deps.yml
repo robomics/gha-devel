@@ -69,7 +69,7 @@ jobs:
           set -u
           set -e
 
-          hash="${{ hashFiles('.github/workflows/build-conan-deps.py', 'conanfile.py') }}"
+          hash="${{ hashFiles('.github/workflows/build-conan-deps.yml', 'conanfile.py') }}"
 
           compiler="$(cc --version | head -n 1 | tr -c '[:alnum:]._-' '-' | sed 's/-\+/-/g' | sed 's/-$//')"
 
