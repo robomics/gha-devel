@@ -286,6 +286,13 @@ jobs:
       cmake-rel-key: ${{ steps.collect-cache-key.outputs.cmake-rel-key }}
 
     steps:
+      - name: Check at least one job succeded
+        run:
+          if [ "${{ needs.build-deps-ubuntu.result }}" != 'success' }} &&
+               "${{ needs.build-deps-macos.result }}" != 'success' }} ]; then
+            exit 1
+          fi
+
       - name: Collect output (Ubuntu)
         if: startsWith(inputs.os, 'ubuntu')
         run: |
