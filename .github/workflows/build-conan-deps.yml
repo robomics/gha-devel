@@ -40,7 +40,7 @@ defaults:
 jobs:
   build-deps-ubuntu:
     if: startsWith(inputs.os, 'ubuntu')
-    name: "Build dependencies with Conan (${{ inputs.os }})"
+    name: Build dependencies with Conan (${{ inputs.os }})
     runs-on: ubuntu-latest
 
     container:
@@ -159,7 +159,7 @@ jobs:
 
   build-deps-macos:
     if: startsWith(inputs.os, 'macos')
-    name: "Build dependencies with Conan (${{ inputs.os }})"
+    name: Build dependencies with Conan (${{ inputs.os }})
     runs-on: ${{ inputs.os }}
 
     env:
@@ -195,7 +195,7 @@ jobs:
         id: cache-conan
         uses: actions/cache/restore@v4
         with:
-          key: ${{ steps.generate-cache-key.outputs.key }}
+          key: ${{ steps.generate-cache-key.outputs.conan-key }}
           path: ${{ env.CONAN_HOME }}/p
           lookup-only: true
 
