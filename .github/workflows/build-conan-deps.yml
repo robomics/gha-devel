@@ -59,6 +59,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/build-conan-deps.yml
+            conanfile.py
 
       - name: Update build deps
         run: pip install "conan==${{ inputs.conan-version }}"
@@ -174,6 +178,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/build-conan-deps.yml
+            conanfile.py
 
       - name: Generate cache key
         id: generate-cache-key
@@ -298,6 +306,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            .github/workflows/build-conan-deps.yml
+            conanfile.py
 
       - name: Add devtools to PATH
         uses: ilammy/msvc-dev-cmd@v1
@@ -366,7 +378,8 @@ jobs:
              -s compiler.cppstd=${{ inputs.cppstd }}  \
              --output-folder cmake-prefix-dbg
 
-          tar -cf "${{ github.workspace }}/cmake-prefix-dbg.tar" cmake-prefix-dbg
+          dest="$(cygpath "${{ github.workspace }}/cmake-prefix-dbg.tar")"
+          tar -cf "$dest" cmake-prefix-dbg
 
       - name: Install dependencies (Release)
         if: steps.cache-conan.outputs.cache-hit != 'true'
@@ -382,7 +395,8 @@ jobs:
              -s compiler.cppstd=${{ inputs.cppstd }}  \
              --output-folder cmake-prefix-rel
 
-          tar -cf "${{ github.workspace }}/cmake-prefix-rel.tar" cmake-prefix-rel
+          dest="$(cygpath "${{ github.workspace }}/cmake-prefix-rel.tar")"
+          tar -cf "$dest" cmake-prefix-rel
 
       - name: Clean Conan cache (post-build)
         if: steps.cache-conan.outputs.cache-hit != 'true'
