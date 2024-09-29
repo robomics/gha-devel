@@ -279,16 +279,22 @@ jobs:
     steps:
       - name: Collect output (Ubuntu)
         if: startsWith(inputs.os, 'ubuntu')
-        id: collect-cache-key
         run: |
-          echo "conan-key=${{ needs.build-deps-ubuntu.outputs.conan-key }}" | tee -a "$GITHUB_OUTPUT"
-          echo "cmake-dbg-key=${{ needs.build-deps-ubuntu.outputs.cmake-dbg-key }}" | tee -a "$GITHUB_OUTPUT"
-          echo "cmake-rel-key=${{ needs.build-deps-ubuntu.outputs.cmake-rel-key }}" | tee -a "$GITHUB_OUTPUT"
+          echo "CONAN_KEY=${{ needs.build-deps-ubuntu.outputs.conan-key }}" | tee -a "$GITHUB_ENV"
+          echo "CMAKE_DBG_KEY=${{ needs.build-deps-ubuntu.outputs.cmake-dbg-key }}" | tee -a "$GITHUB_ENV"
+          echo "CMAKE_REL_KEY=${{ needs.build-deps-ubuntu.outputs.cmake-rel-key }}" | tee -a "$GITHUB_ENV"
 
       - name: Collect output (macOS)
-        if: startsWith(inputs.os, 'macos')
+        if: startsWith(inputs.os, 'ubuntu')
+        run: |
+          echo "CONAN_KEY=${{ needs.build-deps-macos.outputs.conan-key }}" | tee -a "$GITHUB_ENV"
+          echo "CMAKE_DBG_KEY=${{ needs.build-deps-macos.outputs.cmake-dbg-key }}" | tee -a "$GITHUB_ENV"
+          echo "CMAKE_REL_KEY=${{ needs.build-deps-macos.outputs.cmake-rel-key }}" | tee -a "$GITHUB_ENV"
+
+      - name: Report output
         id: collect-cache-key
         run: |
-          echo "conan-key=${{ needs.build-deps-macos.outputs.conan-key }}" | tee -a "$GITHUB_OUTPUT"
-          echo "cmake-dbg-key=${{ needs.build-deps-macos.outputs.cmake-dbg-key }}" | tee -a "$GITHUB_OUTPUT"
-          echo "cmake-rel-key=${{ needs.build-deps-macos.outputs.cmake-rel-key }}" | tee -a "$GITHUB_OUTPUT"
+          echo "conan-key=$CONAN_KEY" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-dbg-key=$CMAKE_DBG_KEY" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-rel-key=$CMAKE_REL_KEY" | tee -a "$GITHUB_OUTPUT"
+

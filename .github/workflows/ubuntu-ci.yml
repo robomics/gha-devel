@@ -8,12 +8,14 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/ubuntu-ci.yml"
+      - ".github/workflows/build-conan-deps.yml"
       - "CMakeLists.txt"
       - "conanfile.py"
 
   pull_request:
     paths:
       - ".github/workflows/ubuntu-ci.yml"
+      - ".github/workflows/build-conan-deps.yml"
       - "CMakeLists.txt"
       - "conanfile.py"
 
