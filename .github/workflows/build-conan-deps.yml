@@ -40,7 +40,7 @@ defaults:
 jobs:
   build-deps-ubuntu:
     if: startsWith(inputs.os, 'ubuntu')
-    name: Build dependencies with Conan (Ubuntu)
+    name: Build dependencies with Conan (${{ inputs.os }})
     runs-on: ubuntu-latest
 
     container:
@@ -159,7 +159,7 @@ jobs:
 
   build-deps-macos:
     if: startsWith(inputs.os, 'macos')
-    name: Build dependencies with Conan (macOs)
+    name: Build dependencies with Conan (${{ inputs.os }})
     runs-on: ${{ inputs.os }}
 
     env:
@@ -252,7 +252,7 @@ jobs:
         uses: actions/cache/save@v4
         if: steps.cache-conan.outputs.cache-hit != 'true'
         with:
-          key: ${{ steps.cache-key.outputs.conan-key }}
+          key: ${{ steps.generate-cache-key.outputs.conan-key }}
           path: ${{ env.CONAN_HOME }}/p
         env:
           ZSTD_CLEVEL: 19
@@ -261,7 +261,7 @@ jobs:
         uses: actions/cache/save@v4
         if: steps.cache-conan.outputs.cache-hit != 'true'
         with:
-          key: ${{ steps.cache-key.outputs.cmake-dbg-key }}
+          key: ${{ steps.generate-cache-key.outputs.cmake-dbg-key }}
           path: /tmp/cmake-prefix-dbg.tar
         env:
           ZSTD_CLEVEL: 19
@@ -270,7 +270,7 @@ jobs:
         uses: actions/cache/save@v4
         if: steps.cache-conan.outputs.cache-hit != 'true'
         with:
-          key: ${{ steps.cache-key.outputs.cmake-rel-key }}
+          key: ${{ steps.generate-cache-key.outputs.cmake-rel-key }}
           path: /tmp/cmake-prefix-rel.tar
         env:
           ZSTD_CLEVEL: 19
