@@ -310,9 +310,8 @@ jobs:
 
           hash="${{ hashFiles('.github/workflows/build-conan-deps.yml', 'conanfile.py') }}"
 
-          echo "_MSC_VER" > out.c
-
-          compiler="$(cl.exe /nologo /EP out.c)"
+          echo cl.exe 1> /dev/null 2> version.txt
+          compiler="$(cat version.txt)"
 
           suffix="${{ inputs.os }}-$compiler-c++${{ inputs.cppstd }}-$hash"
 
