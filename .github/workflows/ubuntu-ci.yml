@@ -121,7 +121,7 @@ jobs:
     name: Build Conan deps
     uses: robomics/gha-devel/.github/workflows/build-conan-deps.yml@main
     with:
-      os: ubuntu:20.04
+      os: ubuntu-20.04
 
   build-project:
     name: Build project
