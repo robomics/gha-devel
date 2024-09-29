@@ -134,6 +134,7 @@ jobs:
           key: ${{ needs.build-conan-deps.outputs.conan-key }}
           path: ${{ env.CONAN_HOME }}\p
           fail-on-cache-miss: true
+          enableCrossOsArchive: true
 
       - name: Restore CMake configs (Debug)
         if: matrix.build_type == 'Debug'
