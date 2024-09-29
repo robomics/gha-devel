@@ -40,7 +40,7 @@ defaults:
 jobs:
   build-deps-ubuntu:
     if: startsWith(inputs.os, 'ubuntu')
-    name: Build dependencies with Conan (${{ inputs.os }})
+    name: "Build dependencies with Conan (${{ inputs.os }})"
     runs-on: ubuntu-latest
 
     container:
@@ -159,7 +159,7 @@ jobs:
 
   build-deps-macos:
     if: startsWith(inputs.os, 'macos')
-    name: Build dependencies with Conan (${{ inputs.os }})
+    name: "Build dependencies with Conan (${{ inputs.os }})"
     runs-on: ${{ inputs.os }}
 
     env:
@@ -178,11 +178,18 @@ jobs:
       - name: Generate cache key
         id: generate-cache-key
         run: |
-          hash="${{ hashFiles('.github/workflows/build-conan-deps.py', 'conanfile.py') }}"
+          set -u
+          set -e
 
-          key="conan-${{ inputs.os }}-$CC-c++${{ inputs.cppstd }}-$hash"
+          hash="${{ hashFiles('.github/workflows/build-conan-deps.yml', 'conanfile.py') }}"
 
-          echo "key=$key" | tee -a "$GITHUB_OUTPUT"
+          compiler="$(cc --version | head -n 1 | tr -c '[:alnum:]._-' '-' | sed 's/-\+/-/g' | sed 's/-$//')"
+
+          suffix="${{ inputs.os }}-$compiler-c++${{ inputs.cppstd }}-$hash"
+
+          echo "conan-key=conan-$suffix" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-dbg-key=cmake-dbg-$suffix" | tee -a "$GITHUB_OUTPUT"
+          echo "cmake-rel-key=cmake-rel-$suffix" | tee -a "$GITHUB_OUTPUT"
 
       - name: Restore package cache
         id: cache-conan
