@@ -299,6 +299,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Add devtools to PATH
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Generate cache key
         id: generate-cache-key
         run: |
