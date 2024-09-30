@@ -60,6 +60,9 @@ jobs:
       cmake-rwdi-key: ${{ steps.generate-cache-key.outputs.cmake-rwdi-key }}
 
     steps:
+      - name: Debugging
+        run: find . -type f -exec shasum -a256 {} +
+        
       - name: Checkout workflow
         uses: actions/checkout@v4
         with:
@@ -74,7 +77,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Debugging
-        run: ls -lah
+        run: find . -type f -exec shasum -a256 {} +
 
       - name: Update build deps
         run: pip install "conan==${{ inputs.conan-version }}"
