@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
-          sparse-checkout: .github/workflows/build-conan-deps.yml
+          filter: .github/workflows/build-conan-deps.yml
 
       - name: Debugging
         run: find . -type f -exec shasum -a256 {} +
@@ -75,7 +75,7 @@ jobs:
       - name: Checkout conanfile.py
         uses: actions/checkout@v4
         with:
-          sparse-checkout: conanfile.py
+          filter: conanfile.py
 
       - name: Debugging
         run: find . -type f -exec shasum -a256 {} +
