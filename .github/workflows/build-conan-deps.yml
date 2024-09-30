@@ -73,6 +73,9 @@ jobs:
           sparse-checkout: conanfile.py
           sparse-checkout-cone-mode: false
 
+      - name: Debugging
+        run: ls -lah
+
       - name: Update build deps
         run: pip install "conan==${{ inputs.conan-version }}"
 
