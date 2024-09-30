@@ -9,7 +9,7 @@ required_conan_version = ">=1.53.0"
 
 
 class TestConan(ConanFile):
-    name = "test"
+    name = "test1"
     license = "MIT"
     settings = "os", "arch", "compiler", "build_type"
 
